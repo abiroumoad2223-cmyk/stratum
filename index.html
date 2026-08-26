@@ -697,16 +697,10 @@
     <h2 class="q-title">One offer to unlock your result</h2>
     <p style="font-size:14px;color:var(--muted);margin-top:-10px;">Pick and complete any offer below — it's free. Your reading and product list unlock automatically once it's confirmed.</p>
 
-    <!-- Content locker (Tundrafile) -->
-    <div id="offerwall-container">
-      <script type="text/javascript" src="https://tundrafile.com/script_include.php?id=1910652"></script>
-    </div>
+    <!-- Content locker (CPAGrip / Tundrafile) — loaded dynamically only after the quiz is completed -->
+    <div id="offerwall-container"></div>
 
-    <div class="field-row" style="margin-top:14px;">
-      <button class="btn" id="unlock-btn" style="width:100%;">I've completed an offer — Unlock my result</button>
-    </div>
-    <p class="err" id="email-err" style="display:none;">Please complete an offer first, then click unlock.</p>
-    <p class="consent">Offers are provided by a third-party partner and are separate from Amazon — completing one funds this free tool, it isn't an Amazon requirement. We don't control their content — review each offer before starting it. Your quiz answers stay with Stratum and are not shared with the offer partner.</p>
+    <p class="consent" style="margin-top:18px;">Complete any free offer below. Your personalized routine unlocks automatically when the offer is confirmed — no extra click needed. Offers are provided by a third-party partner and are separate from Amazon. Your quiz answers stay with Stratum and are not shared with the offer partner.</p>
   </div>
 
   <div class="card" id="result-card">
@@ -1002,26 +996,121 @@
       current++;
       renderQuestion();
     } else {
+      // Persist answers so CPAGrip redirect can restore the result after unlock.
+      saveQuizState();
       runAnalyzing(function(){
         stickyProgress.classList.remove('show');
+        if(isUnlocked()){
+          showResult();
+          return;
+        }
+        loadContentLocker();
         gateCard.style.display = 'block';
         gateCard.scrollIntoView({behavior:'smooth', block:'start'});
       });
     }
   });
 
-  var unlockBtn = document.getElementById('unlock-btn');
+  var lockerLoaded = false;
+  var UNLOCK_KEY = 'stratum_offer_unlocked';
+  var ANSWERS_KEY = 'stratum_quiz_answers';
 
+  // Dynamically inject the CPAGrip / Tundrafile locker ONLY after the quiz is finished.
+  function loadContentLocker(){
+    if(lockerLoaded) return;
+    lockerLoaded = true;
+    var container = document.getElementById('offerwall-container');
+    if(!container) return;
+    container.innerHTML = '';
+    var s = document.createElement('script');
+    s.type = 'text/javascript';
+    s.src = 'https://tundrafile.com/script_include.php?id=1910652';
+    s.async = true;
+    container.appendChild(s);
+  }
 
-  unlockBtn.addEventListener('click', function(){
+  function saveQuizState(){
+    try {
+      sessionStorage.setItem(ANSWERS_KEY, JSON.stringify(answers));
+    } catch(e){}
+  }
+
+  function restoreQuizState(){
+    try {
+      var raw = sessionStorage.getItem(ANSWERS_KEY);
+      if(!raw) return false;
+      var saved = JSON.parse(raw);
+      if(!Array.isArray(saved) || saved.length !== questions.length) return false;
+      answers = saved;
+      return true;
+    } catch(e){
+      return false;
+    }
+  }
+
+  function markUnlocked(){
+    try { sessionStorage.setItem(UNLOCK_KEY, '1'); } catch(e){}
+  }
+
+  function isUnlocked(){
+    try {
+      if(sessionStorage.getItem(UNLOCK_KEY) === '1') return true;
+    } catch(e){}
+    var params = new URLSearchParams(window.location.search);
+    // CPAGrip Advanced → Redirect to URL should point to:
+    // https://trystratumskin.com/?unlocked=1
+    if(params.get('unlocked') === '1' || params.get('offer') === 'complete'){
+      markUnlocked();
+      return true;
+    }
+    return false;
+  }
+
+  function cleanUnlockUrl(){
+    try {
+      if(window.history && window.history.replaceState){
+        var url = new URL(window.location.href);
+        if(url.searchParams.has('unlocked') || url.searchParams.has('offer')){
+          url.searchParams.delete('unlocked');
+          url.searchParams.delete('offer');
+          window.history.replaceState({}, '', url.pathname + (url.search ? url.search : '') + url.hash);
+        }
+      }
+    } catch(e){}
+  }
+
+  function unlockAndShowResult(){
+    markUnlocked();
     showResult();
-  });
+  }
 
-  // If the Tundrafile (or other) locker script exposes a completion callback,
-  // call showResult() from that callback so the result unlocks automatically
-  // the moment the offer wall confirms completion.
-  // e.g. window.onOfferComplete = function(){ showResult(); };
-  // Check your Tundrafile dashboard/docs for the exact callback name.
+  // Optional hooks if the locker script ever fires a client-side complete event.
+  window.onOfferComplete = unlockAndShowResult;
+  window.CPABuildOfferComplete = unlockAndShowResult;
+  window.CPABuildOffersComplete = unlockAndShowResult;
+
+  // On page load: if CPAGrip redirected back with ?unlocked=1 and we still have
+  // the quiz answers in this browser session, restore and show the result immediately.
+  (function bootstrapUnlock(){
+    if(!isUnlocked()) return;
+    if(!restoreQuizState()) return;
+    // Hide hero CTA / steps so the user lands cleanly on the result.
+    if(startSection) startSection.style.display = 'none';
+    if(coreEl) coreEl.style.display = 'none';
+    var stepsEl = document.querySelector('.steps');
+    if(stepsEl) stepsEl.style.display = 'none';
+    var trustBar = document.querySelector('.trust-bar');
+    if(trustBar) trustBar.style.display = 'none';
+    var statsRow = document.querySelector('.stats-row');
+    if(statsRow) statsRow.style.display = 'none';
+    var partnerStrip = document.querySelector('.partner-strip');
+    if(partnerStrip) partnerStrip.style.display = 'none';
+    cleanUnlockUrl();
+    // Small delay so the rest of the script (profiles, showResult) is defined.
+    setTimeout(function(){
+      showResult();
+    }, 0);
+  })();
 
   var profiles = {
     dry: {
@@ -1172,7 +1261,11 @@
   }
 
   function showResult(){
-    gateCard.style.display = 'none';
+    if(startSection) startSection.style.display = 'none';
+    if(quizCard) quizCard.style.display = 'none';
+    if(analyzingCard) analyzingCard.style.display = 'none';
+    if(gateCard) gateCard.style.display = 'none';
+    if(stickyProgress) stickyProgress.classList.remove('show');
     var key = pickProfile();
     var p = profiles[key];
     document.getElementById('result-badge').textContent = p.badge;
