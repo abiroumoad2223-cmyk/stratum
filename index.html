@@ -476,6 +476,19 @@
   @media (prefers-reduced-motion: reduce){
     .locker-loading .spin{animation:none;border-top-color:var(--clay);}
   }
+  #mylead-locker-frame{
+    width:100%;
+    min-height:520px;
+    height:620px;
+    border:0;
+    border-radius:14px;
+    background:rgba(14,20,32,0.6);
+    margin-top:12px;
+    display:block;
+  }
+  @media (max-width:640px){
+    #mylead-locker-frame{min-height:560px;height:70vh;}
+  }
 
   .trust-bar{
     display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px;
@@ -591,9 +604,6 @@
     footer{font-size:12px;padding-top:20px;}
   }
 </style>
-<!-- CPAGrip content locker (Load Method must be "On Click").
-     Loads quietly; does not show until call_locker() after the quiz. -->
-<script type="text/javascript" src="https://tundrafile.com/script_include.php?id=1910652"></script>
 </head>
 <body>
 
@@ -738,8 +748,8 @@
     <h2 class="q-title">One offer to unlock your result</h2>
     <p style="font-size:14px;color:var(--muted);margin-top:-10px;">Pick and complete any offer below — it's free. Your reading and product list unlock automatically once it's confirmed.</p>
 
-    <!-- Offers open in the CPAGrip overlay via call_locker() after the quiz.
-         If an ad blocker prevents the locker, #adblock-notice is shown instead. -->
+    <!-- MyLead CPA locker iframe — injected only after the quiz is completed.
+         Unlock happens when MyLead redirects to ?unlocked=1 after a confirmed lead. -->
     <div id="offerwall-container">
       <div id="locker-loading" class="locker-loading">
         <span class="spin" aria-hidden="true"></span>
@@ -748,11 +758,11 @@
     </div>
 
     <div id="adblock-notice" class="adblock-notice" role="alert" aria-live="polite">
-      <p class="ab-title">Ad blocker detected</p>
-      <p class="ab-body">Your browser is blocking the free offer step that unlocks your personalized routine. Please allow offers on this site, then try again.</p>
+      <p class="ab-title">Offers could not load</p>
+      <p class="ab-body">Your browser may be blocking the free offer step that unlocks your personalized routine. Please allow this site, then try again.</p>
       <ol class="ab-steps">
-        <li>Disable your ad blocker (or add <strong>trystratumskin.com</strong> to the allow list)</li>
-        <li>Also allow <strong>tundrafile.com</strong> / CPAGrip if your blocker lists domains</li>
+        <li>Disable your ad blocker (or allow <strong>trystratumskin.com</strong>)</li>
+        <li>Also allow <strong>clickanlook.space</strong> / MyLead if listed</li>
         <li>Click the button below to reload offers</li>
       </ol>
       <div class="ab-actions">
@@ -1058,7 +1068,7 @@
       current++;
       renderQuestion();
     } else {
-      // Persist answers so CPAGrip redirect can restore the result after unlock.
+      // Persist answers so MyLead redirect can restore the result after unlock.
       saveQuizState();
       runAnalyzing(function(){
         stickyProgress.classList.remove('show');
@@ -1076,13 +1086,15 @@
   var lockerOpened = false;
   var UNLOCK_KEY = 'stratum_offer_unlocked';
   var ANSWERS_KEY = 'stratum_quiz_answers';
-  var LOCKER_SCRIPT_SRC = 'https://tundrafile.com/script_include.php?id=1910652';
+  // MyLead CPA Locker iframe URL (from Website codes → URL for your iframe code)
+  var MYLEAD_IFRAME_URL = 'https://clickanlook.space/iframe/dd2cc9b2-a0fe-11f1-abc3-8a5fb7be40ea';
 
   function getLockerEls(){
     return {
       loading: document.getElementById('locker-loading'),
       status: document.getElementById('locker-status'),
-      notice: document.getElementById('adblock-notice')
+      notice: document.getElementById('adblock-notice'),
+      container: document.getElementById('offerwall-container')
     };
   }
 
@@ -1096,17 +1108,16 @@
   function showAdblockNotice(){
     var els = getLockerEls();
     if(els.loading) els.loading.style.display = 'none';
+    var frame = document.getElementById('mylead-locker-frame');
+    if(frame) frame.style.display = 'none';
     if(els.notice) els.notice.classList.add('show');
-    lockerOpened = false; // allow retry
+    lockerOpened = false;
   }
 
-  // Lightweight probes: ad blockers often hide bait nodes / block known CPA domains.
   function detectAdblockLikely(){
     try {
-      // 1) DOM bait element (common filter lists hide these)
       var bait = document.createElement('div');
-      bait.className = 'adsbox ad-banner adsbygoogle pub_300x250 pub_300x250m pub_728x90 text-ad textAd text_ad text_ads text-ads text-ad-links';
-      bait.setAttribute('id', 'ad-banner-bait');
+      bait.className = 'adsbox ad-banner adsbygoogle pub_300x250 text-ad textAd text_ad';
       bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
       document.body.appendChild(bait);
       var baitBlocked = false;
@@ -1117,121 +1128,65 @@
         baitBlocked = true;
       }
       if(bait.parentNode) bait.parentNode.removeChild(bait);
-
-      // 2) CPAGrip script never defined call_locker after enough time
-      var noLockerApi = (typeof window.call_locker !== 'function');
-
-      // 3) Script tag present but likely blocked (no global side effects)
-      var scripts = document.getElementsByTagName('script');
-      var foundSrc = false;
-      for(var i = 0; i < scripts.length; i++){
-        if(scripts[i].src && scripts[i].src.indexOf('tundrafile.com/script_include.php') !== -1){
-          foundSrc = true;
-          break;
-        }
-      }
-
-      return {
-        baitBlocked: baitBlocked,
-        noLockerApi: noLockerApi,
-        scriptTagPresent: foundSrc,
-        likelyBlocked: baitBlocked || noLockerApi
-      };
+      return { baitBlocked: baitBlocked, likelyBlocked: baitBlocked };
     } catch(e){
-      return { baitBlocked: false, noLockerApi: typeof window.call_locker !== 'function', scriptTagPresent: true, likelyBlocked: typeof window.call_locker !== 'function' };
+      return { baitBlocked: false, likelyBlocked: false };
     }
   }
 
-  // Ensure the CPAGrip script is on the page; re-inject if a blocker stripped it.
-  function ensureLockerScript(onReady){
-    if(typeof window.call_locker === 'function'){
-      onReady(true);
-      return;
-    }
-    // Re-inject script (helps after user disables blocker without full reload)
-    var existing = document.querySelector('script[src*="tundrafile.com/script_include.php"]');
-    if(existing && existing.parentNode){
-      existing.parentNode.removeChild(existing);
-    }
-    var s = document.createElement('script');
-    s.type = 'text/javascript';
-    s.src = LOCKER_SCRIPT_SRC + (LOCKER_SCRIPT_SRC.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
-    s.async = true;
-    var done = false;
-    function finish(ok){
-      if(done) return;
-      done = true;
-      onReady(!!ok);
-    }
-    s.onload = function(){ setTimeout(function(){ finish(typeof window.call_locker === 'function'); }, 100); };
-    s.onerror = function(){ finish(false); };
-    document.head.appendChild(s);
-    // Fallback timeout if onload never fires (blocked)
-    setTimeout(function(){ finish(typeof window.call_locker === 'function'); }, 4000);
-  }
-
-  // CPAGrip Load Method = "On Click": script loads quietly; open via call_locker() after quiz.
+  // Inject MyLead locker iframe only after the quiz (not on page load).
   function openContentLocker(){
     showLockerLoading('Loading offers…');
+    var els = getLockerEls();
+    if(!els.container) return;
 
-    ensureLockerScript(function(scriptOk){
-      if(!scriptOk){
+    // Remove previous frame if retrying
+    var old = document.getElementById('mylead-locker-frame');
+    if(old && old.parentNode) old.parentNode.removeChild(old);
+
+    var iframe = document.createElement('iframe');
+    iframe.id = 'mylead-locker-frame';
+    iframe.src = MYLEAD_IFRAME_URL + (MYLEAD_IFRAME_URL.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
+    iframe.setAttribute('title', 'Complete an offer to unlock your routine');
+    iframe.setAttribute('allow', 'fullscreen');
+    iframe.setAttribute('loading', 'eager');
+    iframe.style.display = 'none';
+
+    var loadTimer = setTimeout(function(){
+      // Still hidden after timeout → likely blocked
+      if(iframe.style.display === 'none'){
         showAdblockNotice();
-        return;
       }
+    }, 8000);
 
-      var attempts = 0;
-      var maxAttempts = 24; // ~6s
+    iframe.onload = function(){
+      clearTimeout(loadTimer);
+      lockerOpened = true;
+      if(els.loading) els.loading.style.display = 'none';
+      iframe.style.display = 'block';
+      if(els.status) els.status.textContent = 'Complete any offer below — your result unlocks automatically.';
+    };
+    iframe.onerror = function(){
+      clearTimeout(loadTimer);
+      showAdblockNotice();
+    };
 
-      function tryOpen(){
-        attempts++;
-        if(typeof window.call_locker === 'function'){
-          try {
-            window.call_locker();
-            lockerOpened = true;
-            showLockerLoading('Complete any offer below — your result unlocks automatically.');
-            // After opening, verify the overlay actually appeared (some blockers kill iframes)
-            setTimeout(function(){
-              var probe = detectAdblockLikely();
-              // If call_locker ran but nothing visual is typical when iframe is blocked;
-              // we can't always see cross-origin DOM. Rely on call_locker success + redirect unlock.
-              // Still show notice if bait is strongly blocked AND user reports issues via retry UX.
-              if(probe.baitBlocked && !document.getElementById('InlineBoxMainOuterLayer') &&
-                 !document.getElementById('main_div') && !document.querySelector('iframe[src*="tundrafile"], iframe[src*="cpagrip"]')){
-                // Soft signal only — don't false-positive if overlay uses different markup
-              }
-            }, 1200);
-          } catch(err){
-            showAdblockNotice();
-          }
-          return;
-        }
-        if(attempts >= maxAttempts){
-          showAdblockNotice();
-          return;
-        }
-        setTimeout(tryOpen, 250);
+    els.container.appendChild(iframe);
+
+    // Soft adblock signal (doesn't block if iframe still loads)
+    setTimeout(function(){
+      var probe = detectAdblockLikely();
+      if(probe.likelyBlocked && iframe.style.display === 'none'){
+        showAdblockNotice();
       }
-      tryOpen();
-    });
+    }, 2500);
   }
 
-  // Retry after user claims they disabled the ad blocker
   var adblockRetryBtn = document.getElementById('adblock-retry-btn');
   if(adblockRetryBtn){
     adblockRetryBtn.addEventListener('click', function(){
       showLockerLoading('Checking again…');
-      // Brief pause so extension state can settle after whitelist
-      setTimeout(function(){
-        var probe = detectAdblockLikely();
-        if(probe.baitBlocked && probe.noLockerApi){
-          showAdblockNotice();
-          var els = getLockerEls();
-          if(els.status){ /* keep notice visible */ }
-          return;
-        }
-        openContentLocker();
-      }, 400);
+      setTimeout(function(){ openContentLocker(); }, 400);
     });
   }
 
@@ -1279,7 +1234,7 @@
       if(storageGet(UNLOCK_KEY) === '1') return true;
     } catch(e){}
     var params = new URLSearchParams(window.location.search);
-    // CPAGrip Advanced → Redirect to URL must be exactly:
+    // MyLead unlock action → Redirect to URL must be exactly:
     // https://trystratumskin.com/?unlocked=1
     // Also accept common variants networks sometimes append.
     var u = params.get('unlocked');
@@ -1324,7 +1279,7 @@
   window.CPABuildOfferComplete = unlockAndShowResult;
   window.CPABuildOffersComplete = unlockAndShowResult;
 
-  // On page load: CPAGrip redirected with ?unlocked=1 → restore answers → show result.
+  // On page load: MyLead redirected with ?unlocked=1 → restore answers → show result.
   (function bootstrapUnlock(){
     if(!isUnlocked()) return;
 
