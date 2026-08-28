@@ -1282,6 +1282,22 @@
         text-decoration: underline;
       }
 
+      .btn:disabled,
+      .btn[disabled] {
+        background: #3a424f !important;
+        color: #7a8494 !important;
+        box-shadow: none !important;
+        animation: none !important;
+        cursor: not-allowed;
+        transform: none !important;
+      }
+      .btn:disabled:hover,
+      .btn[disabled]:hover {
+        background: #3a424f !important;
+        box-shadow: none !important;
+        transform: none !important;
+      }
+
       /* Footer */
       #site-footer {
         padding-top: 32px;
@@ -2040,10 +2056,7 @@
           >
             Sign up for texts
           </button>
-          <p class="err" id="sms-optin-err" style="display: none">
-            Please enter a valid phone number and check the consent box to
-            continue.
-          </p>
+          <p class="err" id="sms-optin-err" style="display: none"></p>
         </form>
         <p
           id="sms-optin-success"
@@ -2943,10 +2956,8 @@
     </script>
 
     <script>
-      // SMS opt-in signup — collects phone + explicit consent BEFORE any text is sent.
-      // Button stays disabled until a plausible phone number is entered AND the consent
-      // checkbox is checked. On success the form fields hide and a success message
-      // appears inside the same card.
+      // SMS opt-in — button stays disabled + grayed until phone is valid AND checkbox is checked.
+      // On submit we still validate and show specific errors for phone / checkbox / both.
       (function () {
         var form = document.getElementById("sms-optin-form");
         if (!form) return;
@@ -2966,16 +2977,37 @@
           submitBtn.disabled = !ok;
         }
 
-        phoneInput.addEventListener("input", updateButtonState);
+        phoneInput.addEventListener("input", function () {
+          errEl.style.display = "none";
+          updateButtonState();
+        });
         phoneInput.addEventListener("change", updateButtonState);
-        consentInput.addEventListener("change", updateButtonState);
-        updateButtonState(); // initial state = disabled
+        consentInput.addEventListener("change", function () {
+          errEl.style.display = "none";
+          updateButtonState();
+        });
+        updateButtonState(); // starts disabled + grayed
 
         form.addEventListener("submit", function (e) {
           e.preventDefault();
           errEl.style.display = "none";
 
-          if (!isPlausiblePhone(phoneInput.value) || !consentInput.checked) {
+          var phoneOk = isPlausiblePhone(phoneInput.value);
+          var consentOk = consentInput.checked;
+
+          if (!phoneOk || !consentOk) {
+            var messages = [];
+            if (!phoneOk) {
+              messages.push(
+                phoneInput.value.trim() === ""
+                  ? "Please enter your phone number."
+                  : "Please enter a valid phone number.",
+              );
+            }
+            if (!consentOk) {
+              messages.push("Please check the consent box to continue.");
+            }
+            errEl.textContent = messages.join(" ");
             errEl.style.display = "block";
             return;
           }
@@ -2983,9 +3015,7 @@
           submitBtn.disabled = true;
           submitBtn.textContent = "Signing up…";
 
-          // Placeholder submission — replace SIGNUP_ENDPOINT_URL with your real
-          // signup endpoint. Send the phone number, the consent flag, and a
-          // timestamp so you have a durable record of opt-in for TCPA/Twilio purposes.
+          // Placeholder — replace with your real endpoint when ready
           var SIGNUP_ENDPOINT_URL = "";
           var payload = {
             phone: phoneInput.value.trim(),
@@ -2994,18 +3024,12 @@
             source: "trystratumskin.com sms-optin",
           };
 
-          // No endpoint configured yet — show success locally so the form is
-          // testable, but nothing is actually stored until an endpoint is wired up.
           if (!SIGNUP_ENDPOINT_URL) {
             form.style.display = "none";
             successEl.style.display = "block";
             return;
           }
 
-          // Content-Type is deliberately text/plain, not application/json:
-          // Google Apps Script web apps don't handle CORS preflight (OPTIONS)
-          // requests, so a text/plain body avoids the browser sending one while
-          // Apps Script still reads the JSON string fine via e.postData.contents.
           fetch(SIGNUP_ENDPOINT_URL, {
             method: "POST",
             headers: { "Content-Type": "text/plain;charset=utf-8" },
