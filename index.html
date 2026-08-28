@@ -439,56 +439,32 @@
   .consent{font-size:12px;color:var(--muted);opacity:0.85;margin-top:14px;line-height:1.6;}
   .disclosure{font-size:13px;color:var(--muted);margin:0;line-height:1.5;}
 
-  /* Ad-blocker recovery panel */
-  .adblock-notice{
-    display:none;
-    margin-top:16px;
-    padding:22px 20px;
-    border-radius:14px;
-    border:1px solid rgba(226,97,47,0.45);
-    background:rgba(44,29,24,0.85);
-    text-align:left;
+  /* SMS opt-in */
+  .sms-optin .field-row{display:flex;gap:10px;margin-top:6px;}
+  input[type="tel"]{
+    flex:1;padding:13px 14px;border-radius:8px;border:1px solid var(--card-line);
+    font-family:'Archivo',sans-serif;font-size:15px;background:var(--ink-2);color:var(--cream);
   }
-  .adblock-notice.show{display:block;}
-  .adblock-notice .ab-title{
-    font-family:'Fraunces',serif;font-size:20px;font-weight:500;
-    color:var(--cream);margin:0 0 10px;line-height:1.25;
+  input[type="tel"]::placeholder{color:var(--muted);}
+  input[type="tel"]:focus{outline:none;border-color:var(--clay);}
+  .sms-consent-row{
+    display:flex;align-items:flex-start;gap:10px;margin-top:16px;cursor:pointer;
   }
-  .adblock-notice .ab-body{
-    font-size:14px;color:var(--muted);margin:0 0 14px;line-height:1.6;
+  .sms-consent-row input[type="checkbox"]{
+    margin-top:3px;flex-shrink:0;width:16px;height:16px;accent-color:var(--clay);
   }
-  .adblock-notice .ab-steps{
-    margin:0 0 18px;padding-left:18px;color:var(--cream);font-size:14px;line-height:1.65;
+  .sms-consent-row span{font-size:12px;color:var(--muted);line-height:1.6;}
+  .sms-consent-row a{color:var(--cream);text-decoration:underline;}
+
+  /* Footer */
+  #site-footer{
+    padding-top:32px;margin-top:8px;border-top:1px solid var(--card-line);
+    display:flex;flex-direction:column;gap:18px;font-size:13px;color:var(--muted);line-height:1.6;
   }
-  .adblock-notice .ab-steps li{margin-bottom:6px;}
-  .adblock-notice .ab-actions{display:flex;flex-direction:column;gap:10px;}
-  .adblock-notice .ab-actions .btn{width:100%;}
-  .locker-loading{
-    display:flex;align-items:center;gap:10px;
-    font-size:14px;color:var(--muted);margin:14px 0 0;
-  }
-  .locker-loading .spin{
-    width:16px;height:16px;border-radius:50%;
-    border:2px solid rgba(243,238,227,0.2);border-top-color:var(--clay);
-    animation:lockerSpin 0.7s linear infinite;flex-shrink:0;
-  }
-  @keyframes lockerSpin{to{transform:rotate(360deg);}}
-  @media (prefers-reduced-motion: reduce){
-    .locker-loading .spin{animation:none;border-top-color:var(--clay);}
-  }
-  #mylead-locker-frame{
-    width:100%;
-    min-height:520px;
-    height:620px;
-    border:0;
-    border-radius:14px;
-    background:rgba(14,20,32,0.6);
-    margin-top:12px;
-    display:block;
-  }
-  @media (max-width:640px){
-    #mylead-locker-frame{min-height:560px;height:70vh;}
-  }
+  #site-footer a{color:var(--muted);}
+  #site-footer .footer-brand{font-family:'Fraunces',serif;font-size:16px;color:var(--cream);margin:0 0 6px;}
+  #site-footer .footer-meta p{margin:0 0 6px;}
+  #site-footer .footer-links a{color:var(--cream);text-decoration:underline;margin-right:2px;}
 
   .trust-bar{
     display:flex;flex-wrap:wrap;gap:10px;margin:0 0 34px;
@@ -743,38 +719,6 @@
     </div>
   </div>
 
-  <div class="card" id="gate-card">
-    <p class="q-label">Last step</p>
-    <h2 class="q-title">One offer to unlock your result</h2>
-    <p style="font-size:14px;color:var(--muted);margin-top:-10px;">Pick and complete any offer below — it's free. Your reading and product list unlock automatically once it's confirmed.</p>
-
-    <!-- MyLead CPA locker iframe — injected only after the quiz is completed.
-         Unlock happens when MyLead redirects to ?unlocked=1 after a confirmed lead. -->
-    <div id="offerwall-container">
-      <div id="locker-loading" class="locker-loading">
-        <span class="spin" aria-hidden="true"></span>
-        <span id="locker-status">Loading offers…</span>
-      </div>
-    </div>
-
-    <div id="adblock-notice" class="adblock-notice" role="alert" aria-live="polite">
-      <p class="ab-title">Offers could not load</p>
-      <p class="ab-body">Your browser may be blocking the free offer step that unlocks your personalized routine. Please allow this site, then try again.</p>
-      <ol class="ab-steps">
-        <li>Disable your ad blocker (or allow <strong>trystratumskin.com</strong>)</li>
-        <li>Also allow <strong>clickanlook.space</strong> / MyLead if listed</li>
-        <li>Click the button below to reload offers</li>
-      </ol>
-      <div class="ab-actions">
-        <button type="button" class="btn btn-cta" id="adblock-retry-btn" style="font-size:16px;padding:16px 24px;">
-          I've disabled my ad blocker — Load offers
-        </button>
-      </div>
-    </div>
-
-    <p class="consent" style="margin-top:18px;">Complete any free offer below. Your personalized routine unlocks automatically when the offer is confirmed — no extra click needed. Offers are provided by a third-party partner and are separate from Amazon. Your quiz answers stay with Stratum and are not shared with the offer partner.</p>
-  </div>
-
   <div class="card" id="result-card">
     <div class="print-header">
       <h1>Your Stratum Skin Routine</h1>
@@ -818,9 +762,58 @@
     </div>
   </div>
 
-  <footer class="no-print">
+  <div class="card sms-optin no-print" id="sms-optin-card">
+    <p class="q-label">Stay in the loop</p>
+    <h2 class="q-title" style="font-size:22px;">Get skin drops &amp; quiz reminders by text</h2>
+    <p style="font-size:14px;color:var(--muted);margin:10px 0 20px;line-height:1.6;">
+      Leave your number and we'll text you new routine tips, restock alerts, and the occasional
+      discount — nothing else.
+    </p>
+    <form id="sms-optin-form" novalidate>
+      <div class="field-row">
+        <input type="tel" id="sms-phone" name="phone" placeholder="Phone number" autocomplete="tel" required inputmode="tel">
+      </div>
+      <label class="sms-consent-row" for="sms-consent-check">
+        <input type="checkbox" id="sms-consent-check" name="consent" required>
+        <span>
+          I agree to receive recurring marketing text messages from <strong>Stratum Skin</strong> at the
+          phone number provided, including new-routine alerts, restock notices, and promotional offers.
+          Consent is not a condition of any purchase. Message frequency varies (up to ~4 msgs/month).
+          Message &amp; data rates may apply. Reply <strong>STOP</strong> to unsubscribe at any time,
+          <strong>HELP</strong> for help. See our <a href="privacy-policy.html">Privacy Policy</a> and
+          <a href="terms-of-service.html">Terms of Service</a>.
+        </span>
+      </label>
+      <button type="submit" class="btn" id="sms-optin-submit" style="margin-top:16px;width:100%;">Sign up for texts</button>
+      <p class="err" id="sms-optin-err" style="display:none;">Please enter a valid phone number and check the consent box to continue.</p>
+      <p id="sms-optin-success" style="display:none;font-size:13px;color:var(--muted);margin-top:12px;">You're in! Watch for a text confirming your signup.</p>
+    </form>
+  </div>
 
-    Stratum is a skincare recommendation service and an Amazon Associate. We built this quiz to help you find a routine that fits. &copy; 2026 Stratum.
+  <footer class="no-print" id="site-footer">
+    <div class="footer-main">
+      <p class="footer-brand">About Stratum Skin</p>
+      <p>Stratum started as a simple question: why does every skincare routine online look the
+      same, when no two skin types react to the same products the same way? We're a small,
+      independently run skincare guide based in Casablanca, Morocco. Instead of another list of
+      "10 best products," we built a short quiz that reads your actual skin signals — barrier
+      health, sensitivity, sun habits — and turns them into a routine that's specific to you, plus
+      a plain-language reason for every product on the list.</p>
+      <p>We're not a skincare brand and we don't sell anything ourselves. As an Amazon Associate,
+      we link straight to real listings on Amazon and earn a small commission on qualifying
+      purchases — at no extra cost to you. That's the whole business model: no hidden data
+      resale, no spam.</p>
+    </div>
+    <div class="footer-meta">
+      <p>Stratum Skin &middot; Street Ennasr, Casablanca, Morocco</p>
+      <p>Contact: <a href="mailto:stratumskin2627@gmail.com">stratumskin2627@gmail.com</a></p>
+      <p class="footer-links">
+        <a href="privacy-policy.html">Privacy Policy</a>
+        <span aria-hidden="true">&middot;</span>
+        <a href="terms-of-service.html">Terms of Service</a>
+      </p>
+      <p>&copy; 2026 Stratum Skin. All rights reserved.</p>
+    </div>
   </footer>
 
 </div>
@@ -1068,258 +1061,24 @@
       current++;
       renderQuestion();
     } else {
-      // Persist answers so MyLead redirect can restore the result after unlock.
-      saveQuizState();
+      // Quiz finished — show the result immediately, no offer/unlock step.
       runAnalyzing(function(){
         stickyProgress.classList.remove('show');
-        if(isUnlocked()){
-          showResult();
-          return;
-        }
-        gateCard.style.display = 'block';
-        gateCard.scrollIntoView({behavior:'smooth', block:'start'});
-        openContentLocker();
+        showResult();
       });
     }
   });
-
-  var lockerOpened = false;
-  var UNLOCK_KEY = 'stratum_offer_unlocked';
-  var ANSWERS_KEY = 'stratum_quiz_answers';
-  // MyLead CPA Locker iframe URL (from Website codes → URL for your iframe code)
-  var MYLEAD_IFRAME_URL = 'https://clickanlook.space/iframe/dd2cc9b2-a0fe-11f1-abc3-8a5fb7be40ea';
-
-  function getLockerEls(){
-    return {
-      loading: document.getElementById('locker-loading'),
-      status: document.getElementById('locker-status'),
-      notice: document.getElementById('adblock-notice'),
-      container: document.getElementById('offerwall-container')
-    };
-  }
-
-  function showLockerLoading(msg){
-    var els = getLockerEls();
-    if(els.notice) els.notice.classList.remove('show');
-    if(els.loading) els.loading.style.display = 'flex';
-    if(els.status && msg) els.status.textContent = msg;
-  }
-
-  function showAdblockNotice(){
-    var els = getLockerEls();
-    if(els.loading) els.loading.style.display = 'none';
-    var frame = document.getElementById('mylead-locker-frame');
-    if(frame) frame.style.display = 'none';
-    if(els.notice) els.notice.classList.add('show');
-    lockerOpened = false;
-  }
-
-  function detectAdblockLikely(){
-    try {
-      var bait = document.createElement('div');
-      bait.className = 'adsbox ad-banner adsbygoogle pub_300x250 text-ad textAd text_ad';
-      bait.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;';
-      document.body.appendChild(bait);
-      var baitBlocked = false;
-      var cs = window.getComputedStyle ? window.getComputedStyle(bait) : null;
-      if(!bait || bait.offsetParent === null ||
-         (cs && (cs.display === 'none' || cs.visibility === 'hidden' || cs.opacity === '0')) ||
-         bait.clientHeight === 0){
-        baitBlocked = true;
-      }
-      if(bait.parentNode) bait.parentNode.removeChild(bait);
-      return { baitBlocked: baitBlocked, likelyBlocked: baitBlocked };
-    } catch(e){
-      return { baitBlocked: false, likelyBlocked: false };
-    }
-  }
-
-  // Inject MyLead locker iframe only after the quiz (not on page load).
-  function openContentLocker(){
-    showLockerLoading('Loading offers…');
-    var els = getLockerEls();
-    if(!els.container) return;
-
-    // Remove previous frame if retrying
-    var old = document.getElementById('mylead-locker-frame');
-    if(old && old.parentNode) old.parentNode.removeChild(old);
-
-    var iframe = document.createElement('iframe');
-    iframe.id = 'mylead-locker-frame';
-    iframe.src = MYLEAD_IFRAME_URL + (MYLEAD_IFRAME_URL.indexOf('?') === -1 ? '?' : '&') + '_=' + Date.now();
-    iframe.setAttribute('title', 'Complete an offer to unlock your routine');
-    iframe.setAttribute('allow', 'fullscreen');
-    iframe.setAttribute('loading', 'eager');
-    iframe.style.display = 'none';
-
-    var loadTimer = setTimeout(function(){
-      // Still hidden after timeout → likely blocked
-      if(iframe.style.display === 'none'){
-        showAdblockNotice();
-      }
-    }, 8000);
-
-    iframe.onload = function(){
-      clearTimeout(loadTimer);
-      lockerOpened = true;
-      if(els.loading) els.loading.style.display = 'none';
-      iframe.style.display = 'block';
-      if(els.status) els.status.textContent = 'Complete any offer below — your result unlocks automatically.';
-    };
-    iframe.onerror = function(){
-      clearTimeout(loadTimer);
-      showAdblockNotice();
-    };
-
-    els.container.appendChild(iframe);
-
-    // Soft adblock signal (doesn't block if iframe still loads)
-    setTimeout(function(){
-      var probe = detectAdblockLikely();
-      if(probe.likelyBlocked && iframe.style.display === 'none'){
-        showAdblockNotice();
-      }
-    }, 2500);
-  }
-
-  var adblockRetryBtn = document.getElementById('adblock-retry-btn');
-  if(adblockRetryBtn){
-    adblockRetryBtn.addEventListener('click', function(){
-      showLockerLoading('Checking again…');
-      setTimeout(function(){ openContentLocker(); }, 400);
-    });
-  }
-
-  function storageSet(key, value){
-    try { sessionStorage.setItem(key, value); } catch(e){}
-    try { localStorage.setItem(key, value); } catch(e){}
-  }
-
-  function storageGet(key){
-    try {
-      var v = sessionStorage.getItem(key);
-      if(v != null) return v;
-    } catch(e){}
-    try {
-      return localStorage.getItem(key);
-    } catch(e){}
-    return null;
-  }
-
-  function saveQuizState(){
-    try {
-      storageSet(ANSWERS_KEY, JSON.stringify(answers));
-    } catch(e){}
-  }
-
-  function restoreQuizState(){
-    try {
-      var raw = storageGet(ANSWERS_KEY);
-      if(!raw) return false;
-      var saved = JSON.parse(raw);
-      if(!Array.isArray(saved) || saved.length !== questions.length) return false;
-      answers = saved;
-      return true;
-    } catch(e){
-      return false;
-    }
-  }
-
-  function markUnlocked(){
-    storageSet(UNLOCK_KEY, '1');
-  }
-
-  function isUnlocked(){
-    try {
-      if(storageGet(UNLOCK_KEY) === '1') return true;
-    } catch(e){}
-    var params = new URLSearchParams(window.location.search);
-    // MyLead unlock action → Redirect to URL must be exactly:
-    // https://trystratumskin.com/?unlocked=1
-    // Also accept common variants networks sometimes append.
-    var u = params.get('unlocked');
-    var o = params.get('offer');
-    if(u === '1' || u === 'true' || o === 'complete' || o === '1' || params.get('lead') === '1'){
-      markUnlocked();
-      return true;
-    }
-    return false;
-  }
-
-  function cleanUnlockUrl(){
-    try {
-      if(window.history && window.history.replaceState){
-        var url = new URL(window.location.href);
-        ['unlocked','offer','lead'].forEach(function(k){ url.searchParams.delete(k); });
-        window.history.replaceState({}, '', url.pathname + (url.search ? url.search : '') + url.hash);
-      }
-    } catch(e){}
-  }
 
   function hideMarketingChrome(){
     if(startSection) startSection.style.display = 'none';
     if(coreEl) coreEl.style.display = 'none';
     if(quizCard) quizCard.style.display = 'none';
     if(analyzingCard) analyzingCard.style.display = 'none';
-    if(gateCard) gateCard.style.display = 'none';
     ['steps','trust-bar','stats-row','partner-strip'].forEach(function(cls){
       var el = document.querySelector('.' + cls);
       if(el) el.style.display = 'none';
     });
   }
-
-  function unlockAndShowResult(){
-    markUnlocked();
-    hideMarketingChrome();
-    showResult();
-  }
-
-  // Optional hooks if the locker script ever fires a client-side complete event.
-  window.onOfferComplete = unlockAndShowResult;
-  window.CPABuildOfferComplete = unlockAndShowResult;
-  window.CPABuildOffersComplete = unlockAndShowResult;
-
-  // On page load: MyLead redirected with ?unlocked=1 → restore answers → show result.
-  (function bootstrapUnlock(){
-    if(!isUnlocked()) return;
-
-    hideMarketingChrome();
-    cleanUnlockUrl();
-
-    if(restoreQuizState()){
-      setTimeout(function(){ showResult(); }, 0);
-      return;
-    }
-
-    // Unlocked but quiz answers missing (cleared storage / different browser).
-    // Show a clear recovery path instead of a blank home page.
-    setTimeout(function(){
-      if(gateCard){
-        gateCard.style.display = 'block';
-        var title = gateCard.querySelector('.q-title');
-        var sub = gateCard.querySelector('p');
-        if(title) title.textContent = 'Offer completed';
-        if(sub) sub.textContent = 'Your unlock is saved. Take the short quiz once more to generate your personalized routine — you will not need to complete another offer.';
-        var loading = document.getElementById('locker-loading');
-        var notice = document.getElementById('adblock-notice');
-        var consent = gateCard.querySelector('.consent');
-        if(loading) loading.style.display = 'none';
-        if(notice) notice.classList.remove('show');
-        if(consent) consent.style.display = 'none';
-        var offerwall = document.getElementById('offerwall-container');
-        if(offerwall) offerwall.innerHTML = '<button type="button" class="btn btn-cta" id="retake-after-unlock" style="font-size:16px;padding:16px 24px;margin-top:8px;">Take the quiz to see my routine</button>';
-        var retake = document.getElementById('retake-after-unlock');
-        if(retake){
-          retake.addEventListener('click', function(){
-            gateCard.style.display = 'none';
-            if(startSection) startSection.style.display = '';
-            if(coreEl) coreEl.style.display = '';
-            window.scrollTo({top:0, behavior:'smooth'});
-          });
-        }
-      }
-    }, 0);
-  })();
 
   var profiles = {
     dry: {
@@ -1700,6 +1459,88 @@
 
     doc.save('stratum-skin-routine.pdf');
   }
+})();
+</script>
+
+<script>
+// SMS opt-in signup — collects phone + explicit consent BEFORE any text is sent.
+// TODO (business owner): point this fetch() at your real signup endpoint
+// (e.g. a Twilio Studio Flow webhook, or your own backend) so numbers are
+// actually stored and consent is logged with a timestamp/IP for your records.
+(function(){
+  var form = document.getElementById('sms-optin-form');
+  if(!form) return;
+  var phoneInput = document.getElementById('sms-phone');
+  var consentInput = document.getElementById('sms-consent-check');
+  var errEl = document.getElementById('sms-optin-err');
+  var successEl = document.getElementById('sms-optin-success');
+  var submitBtn = document.getElementById('sms-optin-submit');
+
+  function isPlausiblePhone(v){
+    var digits = (v || '').replace(/[^0-9]/g, '');
+    return digits.length >= 8 && digits.length <= 15;
+  }
+
+  form.addEventListener('submit', function(e){
+    e.preventDefault();
+    errEl.style.display = 'none';
+
+    if(!isPlausiblePhone(phoneInput.value) || !consentInput.checked){
+      errEl.style.display = 'block';
+      return;
+    }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Signing up…';
+
+    // Placeholder submission — replace SIGNUP_ENDPOINT_URL with your real
+    // signup endpoint. Send the phone number, the consent flag, and a
+    // timestamp so you have a durable record of opt-in for TCPA/Twilio purposes.
+    var SIGNUP_ENDPOINT_URL = '';
+    var payload = {
+      phone: phoneInput.value.trim(),
+      consent: true,
+      consented_at: new Date().toISOString(),
+      source: 'trystratumskin.com sms-optin'
+    };
+
+    // No endpoint configured yet — show success locally so the form is
+    // testable, but nothing is actually stored until an endpoint is wired up.
+    // See apps-script-backend.gs for a ready-made Google Sheets backend —
+    // deploy it, then paste its Web app URL into SIGNUP_ENDPOINT_URL below.
+    if(!SIGNUP_ENDPOINT_URL){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign up for texts';
+      form.style.display = 'none';
+      successEl.style.display = 'block';
+      return;
+    }
+
+    // Content-Type is deliberately text/plain, not application/json:
+    // Google Apps Script web apps don't handle CORS preflight (OPTIONS)
+    // requests, so a text/plain body avoids the browser sending one while
+    // Apps Script still reads the JSON string fine via e.postData.contents.
+    fetch(SIGNUP_ENDPOINT_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'text/plain;charset=utf-8'},
+      body: JSON.stringify(payload)
+    }).then(function(res){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign up for texts';
+      if(res && res.ok){
+        form.style.display = 'none';
+        successEl.style.display = 'block';
+      } else {
+        errEl.textContent = 'Something went wrong — please try again.';
+        errEl.style.display = 'block';
+      }
+    }).catch(function(){
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Sign up for texts';
+      errEl.textContent = 'Something went wrong — please try again.';
+      errEl.style.display = 'block';
+    });
+  });
 })();
 </script>
 
